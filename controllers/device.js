@@ -18,3 +18,10 @@ exports.getDevice = async (req, res) => {
     const device = await Device.findById(req.params.id);
     res.status(200).json({ device });
 }
+exports.updateDevice = async (req, res) => {
+    const updatedDevice = await Device.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true
+      });
+    res.status(200).json({ updatedDevice, message: 'Successfully updated' });
+}
