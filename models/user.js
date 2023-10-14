@@ -33,6 +33,7 @@ userSchema.pre('save', async function (next) {
         return next();
     }
     this.password = await bcrypt.hash(this.password, 9);
+    this.passwordChangedAt = Date.now();
     next();
 });
 userSchema.methods.comparePassword = async function (candidatePass, dbPassword) {

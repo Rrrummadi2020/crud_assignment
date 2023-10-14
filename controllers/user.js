@@ -63,6 +63,24 @@ exports.authController = async (req, res, next) => {
         return res.status(401).json({ message: 'Invalid token' });
     }
 }
+exports.changePasswod = async (req, res) => {
+  /**
+   * 1 find the user by email ID
+   * 2 call the check Password method on the user model
+   * 3 add the properties of pw and cpw
+   * 4 update the user
+   */
+  let user = await User.findOne({ email: req.body.email }).select("+password");
+  if (user && (await user.comparePassword(req.body.password, user.password))) {
+    user.password = req.body.newPassword;
+    user.confirmPassword = req.body.confirmNewPassword;
+    await await user.save();
+    return res.status(200).json({ message: "Password successfully changed" });
+  }
+  return res
+    .status(200)
+    .json({ message: "give the correct old username and password" });
+};
 const signToken = (id) => {
     return jwt.sign({ id }, process.env.SECRET_KEY, {
         expiresIn: process.env.JWT_EXPIRES
