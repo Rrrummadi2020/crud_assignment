@@ -41,6 +41,7 @@ exports.authController = async (req, res, next) => {
          * 1 take the token fromthe req
          * 2 verify the token 
          * 3 use is present or not 
+         * 4 is token expired
          * 4 if password changed or not
          * 5 call next method
         */
@@ -50,11 +51,14 @@ exports.authController = async (req, res, next) => {
         }
         let jwtVerifiedResult = await promisify(jwt.verify)(token, process.env.SECRET_KEY);
         const user = await User.findOne({_id:jwtVerifiedResult.id});
-        if (user) {
-            next();
-        } else {
+        if (!user) {
             return res.status(401).json({ message: 'Invalid token' });
         }
+        if(user.isPasswordExpired(jwtVerifiedResult.iat)){
+            return res.status(401).json({ message: 'Token expired ' });
+        }
+        next();
+
     } catch (e) {
         return res.status(401).json({ message: 'Invalid token' });
     }
