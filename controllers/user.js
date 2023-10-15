@@ -105,8 +105,29 @@ exports.forgotPasswod = async (req, res, next) => {
   await sendMail({ email: 'ramarangeswarareddy123@gmail.com', text, subject: 'token will expire on' });
   return res.status(200).json({
     message: 'Reset token sent to your Registered Email ID',
-    resetToken,
     status: 'success'
+  });
+};
+exports.resetPassword = async (req, res, next) => {
+  console.log(req.params.token);
+  /**
+   * 1 find the user using resetToken
+   * 2 update the password & cpw, save ,
+   */
+  const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+  console.log(hashedToken);
+  const user = await User.findOne({ passwordResetToken: hashedToken });
+  if (!user)
+    return res.status(404).json({
+      message: 'Token expired'
+    });
+  console.log('User _id');
+  console.log(user._id);
+  user.password = req.body.password;
+  user.confirmPassword = req.body.confirmPassword;
+  await user.save();
+  return res.status(200).json({
+    message: 'Success Reseted the password'
   });
 };
 const signToken = (id) => {
