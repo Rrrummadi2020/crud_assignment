@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
   username: {
@@ -21,27 +22,39 @@ const userSchema = new mongoose.Schema({
     require: [true, 'Please enter your COnfirm password']
   },
   image: {
-    type: String,
+    type: String
   },
   passwordChangedAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now()
   },
+  passwordResetToken: {
+    type: String
+  },
+  passwordResetExpiredAt: {
+    type: Date
+  }
 });
 userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) {
-        return next();
-    }
-    this.password = await bcrypt.hash(this.password, 9);
-    this.passwordChangedAt = Date.now();
-    next();
+  if (!this.isModified('password')) {
+    return next();
+  }
+  this.password = await bcrypt.hash(this.password, 9);
+  this.passwordChangedAt = Date.now();
+  next();
 });
+userSchema.methods.createPasswordResetToken = function () {
+  let resetToken = crypto.randomBytes(32).toString('hex');
+  this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  this.passwordResetExpiredAt = Date.now() + 10 * 60 * 1000;
+  return resetToken;
+};
 userSchema.methods.comparePassword = async function (candidatePass, dbPassword) {
-    return await bcrypt.compare(candidatePass, dbPassword);
-}
+  return await bcrypt.compare(candidatePass, dbPassword);
+};
 userSchema.methods.isPasswordExpired = function (JWTIssuedTime) {
-    // converting milliseconds to seconds 
-    return JWTIssuedTime < parseInt(this.passwordChangedAt / 1000, 10);
+  // converting milliseconds to seconds
+  return JWTIssuedTime < parseInt(this.passwordChangedAt / 1000, 10);
 };
 const User = mongoose.model('User', userSchema);
 module.exports = User;
