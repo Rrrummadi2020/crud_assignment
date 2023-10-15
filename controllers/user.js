@@ -30,7 +30,6 @@ exports.login = async (req, res) => {
   const user = await User.findOne({ email }).select('+password');
   if (user && (await user.comparePassword(password, user.password))) {
     let token = signToken(user._id);
-    // console.log(user);
     res.status(201).json({ token });
   } else {
     res.status(404).json({ token: 'Wrong' });
@@ -38,7 +37,6 @@ exports.login = async (req, res) => {
 };
 exports.authController = async (req, res, next) => {
   try {
-    console.log('AuthController called');
     /**
      * 1 take the token fromthe req
      * 2 verify the token
@@ -109,20 +107,16 @@ exports.forgotPasswod = async (req, res, next) => {
   });
 };
 exports.resetPassword = async (req, res, next) => {
-  console.log(req.params.token);
   /**
    * 1 find the user using resetToken
    * 2 update the password & cpw, save ,
    */
   const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
-  console.log(hashedToken);
   const user = await User.findOne({ passwordResetToken: hashedToken });
   if (!user)
     return res.status(404).json({
       message: 'Token expired'
     });
-  console.log('User _id');
-  console.log(user._id);
   user.password = req.body.password;
   user.confirmPassword = req.body.confirmPassword;
   await user.save();
