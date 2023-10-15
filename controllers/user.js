@@ -57,10 +57,22 @@ exports.authController = async (req, res, next) => {
     if (user.isPasswordExpired(jwtVerifiedResult.iat)) {
       return res.status(401).json({ message: 'Token expired ' });
     }
+    req.user = user;
     next();
   } catch (e) {
     return res.status(401).json({ message: 'Invalid token' });
   }
+};
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    if (roles.includes(req.user.role)) {
+      next();
+    } else {
+      res.status(401).json({
+        message: 'Not authorized'
+      });
+    }
+  };
 };
 exports.changePasswod = async (req, res) => {
   /**
@@ -73,7 +85,7 @@ exports.changePasswod = async (req, res) => {
   if (user && (await user.comparePassword(req.body.password, user.password))) {
     user.password = req.body.newPassword;
     user.confirmPassword = req.body.confirmNewPassword;
-    await await user.save();
+    await user.save();
     return res.status(200).json({ message: 'Password successfully changed' });
   }
   return res.status(200).json({ message: 'give the correct old username and password' });

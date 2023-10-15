@@ -7,11 +7,12 @@ const {
   changePasswod,
   forgotPasswod,
   resetToken,
-  resetPassword
+  resetPassword,
+  restrictTo
 } = require('../controllers/user');
 const router = express.Router();
 
-router.route('/').get(authController, getAllUsers);
+router.route('/').get(authController, restrictTo('admin'), getAllUsers);
 router.route('/signup').post(signUp);
 router.route('/login').post(login);
 router.route('/changePassword').post(changePasswod);

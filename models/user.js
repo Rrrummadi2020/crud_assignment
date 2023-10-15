@@ -19,6 +19,12 @@ const userSchema = new mongoose.Schema({
   confirmPassword: {
     type: String,
     select: false,
+    validate: {
+      validator: function (el) {
+        return el == this.password;
+      },
+      message: 'Password & Confirm Password should match '
+    },
     require: [true, 'Please enter your COnfirm password']
   },
   image: {
@@ -33,6 +39,10 @@ const userSchema = new mongoose.Schema({
   },
   passwordResetExpiredAt: {
     type: Date
+  },
+  role: {
+    type: String,
+    enum: ['admin', 'user']
   }
 });
 userSchema.pre('save', async function (next) {
